@@ -1,9 +1,15 @@
 package se.deved;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HexFormat;
 import java.util.Scanner;
 
 public class Main {
@@ -19,6 +25,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+
         try {
             connectToDatabase();
         } catch (SQLException ignored) {
@@ -56,9 +63,9 @@ public class Main {
             if (commandName.equalsIgnoreCase("register")) {
                 UserManager.registerUser();
             } else if (commandName.equalsIgnoreCase("login")) {
-               if (UserManager.loginUser()) {
-                   break;
-               }
+                if (UserManager.loginUser()) {
+                    break;
+                }
             } else {
                 System.out.println("There is no such command, please try again.");
             }
@@ -123,6 +130,7 @@ public class Main {
     }
 
     public static void connectToDatabase() throws SQLException {
+        //String connectionString = System.getenv("APP_CONNECTION_STRING");
         String connectionString = "jdbc:postgresql://localhost/todo?user=postgres&password=password";
         connection = DriverManager.getConnection(connectionString);
     }

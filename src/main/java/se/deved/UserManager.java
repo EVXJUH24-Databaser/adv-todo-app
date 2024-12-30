@@ -13,6 +13,10 @@ public class UserManager {
         System.out.print("Enter a password: ");
         String password = Main.scanner.nextLine();
 
+        String salt = PasswordHasher.generateSalt();
+        password = PasswordHasher.hashPassword(password, salt);
+        password += ":" + salt;
+
         try (PreparedStatement insertUser = Main.connection.prepareStatement("INSERT INTO users (name, password) VALUES (?, ?)")) {
             insertUser.setString(1, username);
             insertUser.setString(2, password);
@@ -36,16 +40,23 @@ public class UserManager {
         System.out.print("Enter a password: ");
         String password = Main.scanner.nextLine();
 
-        try (PreparedStatement selectUser = Main.connection.prepareStatement("SELECT * FROM users WHERE name = ? AND password = ?")) {
+        try (PreparedStatement selectUser = Main.connection.prepareStatement("SELECT * FROM users WHERE name = ?")) {
             selectUser.setString(1, username);
-            selectUser.setString(2, password);
 
             try (ResultSet result = selectUser.executeQuery()) {
-                if (result.next()) {
-                    // Markera användaren som inloggad.
-                    Main.loggedInUserId = result.getInt("id");
-                    System.out.println("You have logged in!");
-                    return true;
+                while (result.next()) {
+                    String databasePassword = result.getString("password");
+                    // hash:salt
+                    String[] passwordSplit = databasePassword.split(":");
+                    String salt = passwordSplit[1];
+
+                    String hashedPassword = PasswordHasher.hashPassword(password, salt);
+                    if (hashedPassword.equals(passwordSplit[0])) {
+                        // Markera användaren som inloggad.
+                        Main.loggedInUserId = result.getInt("id");
+                        System.out.println("You have logged in!");
+                        return true;
+                    }
                 }
             }
         } catch (SQLException exception) {
